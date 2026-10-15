@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+message: "If you use this certificate or code, please cite the paper."
+title: "Certified bracket for the L4 norm of the cyclic Hilbert transform on Z/31Z: certificate and verifier"
+authors:
+  - family-names: Nefedov
+    given-names: Sergey
+    affiliation: "Lomonosov Moscow State University"
+date-released: 2026-10-16
+version: "1.0"
+license: MIT
+repository-code: "https://github.com/Sergpreneur/paper-p2730"
+keywords:
+  - Hilbert transform
+  - sharp constant
+  - sum of squares
+  - computer-assisted proof
+preferred-citation:
+  type: article
+  title: "A certified bracket of width 1.5e-8 for the L4 norm of the cyclic Hilbert transform on Z/31Z"
+  authors:
+    - family-names: Nefedov
+      given-names: Sergey
+  year: 2026

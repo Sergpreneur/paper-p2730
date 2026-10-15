@@ -1,0 +1,298 @@
+\documentclass[11pt]{amsart}
+\usepackage[margin=1.15in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage{booktabs}
+\usepackage[hidelinks]{hyperref}
+\usepackage[capitalise,noabbrev]{cleveref}
+\usepackage{microtype}
+
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\ZN}{\Z/31\Z}
+\newcommand{\one}{\mathbf{1}}
+\DeclareMathOperator{\sgn}{sgn}
+\DeclareMathOperator{\coef}{coef}
+
+\title[The $L^4$ norm of the cyclic Hilbert transform on $\Z/31\Z$]{A certified bracket of width $1.5\cdot 10^{-8}$ for the $L^4$ norm of the cyclic Hilbert transform on $\Z/31\Z$}
+
+\author{Sergey Nefedov}
+\address{Faculty of Mechanics and Mathematics, Lomonosov Moscow State University, Moscow, Russia}
+\email{sergei.nefedov@math.msu.ru}
+
+\date{16 October 2026}
+
+\subjclass[2020]{42A50, 90C22, 65G20, 14P10}
+\keywords{Hilbert transform, Fourier multiplier, finite cyclic group, sharp constant, sum of squares, semidefinite programming, computer-assisted proof}
+
+\begin{document}
+
+\begin{abstract}
+Let $H$ be the cyclic Hilbert transform on $\ZN$, given by the Fourier multiplier $\widehat{Hf}(k)=-i\sgn(k)\widehat f(k)$, and let $C_{31}$ be its $L^4$ operator norm on real zero-mean functions. We prove
+\[
+  1.5693754353475169 \;<\; C_{31} \;<\; \tfrac{31387509}{20000000} = 1.56937545 .
+\]
+The previously recorded bracket was $1.5693<C_{31}<1.6453$. The upper bound is a degree-four sum-of-squares certificate. It has three ingredients: a translation-invariant Gram matrix on the $496$ quadratic monomials; a cubic multiplier of $\sum_x f(x)$, which restricts the inequality to the zero-mean subspace; and an explicit residual that is controlled by rational interval arithmetic. Positive definiteness is certified by an exact identity $Q-\gamma_0 I=LL^{\mathsf T}+R$ with integer data. The lower bound is a rational witness. A standalone checker written only with the Python standard library verifies both bounds in exact rational arithmetic. Numerically, the local maximizer has value $C_{31}=1.5693754353475169157836\dots$; it is reflection-symmetric and is a nondegenerate local maximum. The certified bracket shows that no critical value exceeds it by more than $1.5\cdot10^{-8}$. Further numerical evidence indicates that the sum-of-squares relaxation is exact.
+\end{abstract}
+
+\maketitle
+
+\section{Introduction}
+
+On the circle, the sharp $L^p$ norm of the conjugate function operator was found by Pichorides~\cite{Pichorides1972}, completing work of M.~Riesz~\cite{Riesz1928}. On the lattice $\Z$, the corresponding problem for the discrete Hilbert transform was solved by Ba\~nuelos and Kwa\'snicki~\cite{BanuelosKwasnicki2019}. For finite cyclic groups, the sign multiplier gives a natural finite-dimensional analogue. Its sharp norm is the maximum of a ratio of quartic forms, and it is not known in closed form even for small odd orders. Problem P2730 of TheoremDB~\cite{tdbP2730} asks for the sharp $L^4$ constant at order $31$. It records the bracket $1.5693<C_{31}<1.6453$. The lower bound there comes from an interval-certified rational witness near the numerically found local maximum $1.5693754353475171$~\cite{tdbR144}. The upper bound comes from Riesz--Thorin interpolation.
+
+The main result of this paper narrows the bracket by more than five orders of magnitude.
+
+\begin{theorem}\label{thm:main}
+Let $C_{31}$ be the supremum of $\|Hf\|_4/\|f\|_4$ over real nonzero $f$ on $\ZN$ with $\sum_x f(x)=0$. Then
+\[
+  1.5693754353475169 < C_{31} < U := \frac{31387509}{20000000}.
+\]
+More precisely, every real $f$ on $\ZN$ with $\sum_x f(x)=0$ satisfies
+\begin{equation}\label{eq:main}
+  U^4\sum_{x} f(x)^4-\sum_x (Hf)(x)^4 \;\ge\; 1.83\cdot 10^{-9}\sum_x f(x)^4 .
+\end{equation}
+\end{theorem}
+
+The proof of the upper bound is a computer-assisted sum-of-squares (SOS) argument~\cite{Lasserre2001,Parrilo2003}. Two features keep the verification short and exact.
+
+First, the Gram matrix is invariant under translations of $\ZN$. This symmetry reduction~\cite{GatermannParrilo2004} is used only to \emph{find} the certificate. The checker itself works with the full $496\times496$ matrix.
+
+Second, the identity contains the term $\bigl(\sum_x f(x)\bigr)\,C(f)$ with a cubic form $C$. This term vanishes on the zero-mean subspace. Without it, the best degree-four SOS bound is (numerically) the norm of $H$ on all of $\R^{31}$, which is about $1.5698391$; this is strictly larger than $C_{31}$, because the constraint $\sum f=0$ is active. A working draft~\cite{draft2026} certified the full-space bound $C_{31}<1.574$ with the same translation-invariant Gram construction but without the multiplier. Adding the multiplier is what makes the relaxation tight.
+
+Following the strategy of rationalizing a numerical SOS solution~\cite{PeyrlParrilo2008,KaltofenLiYangZhi2008}, the certificate consists of integers only, and every inequality used in the proof is checked by exact rational comparisons. The sole transcendental input is the kernel $h(j)$, a sum of sines. The checker encloses it from scratch: $\pi$ by Machin's formula, and the sine by its Taylor series with explicit remainder.
+
+\Cref{sec:numerics} records numerical facts that are not part of the proof. The extremizer is symmetric under $x\mapsto 3-x$, it is a nondegenerate local maximum, and its value agrees with the SOS relaxation to solver accuracy. We also tabulate $C_n$ for other odd orders $n$.
+
+\section{The operator and the quartic problem}\label{sec:setup}
+
+Throughout, $n=31$ and indices are taken modulo $n$. For real $f=(f_0,\dots,f_{30})$ we use
+\[
+  \widehat f(k)=\frac1n\sum_{x}f_x e^{-2\pi i kx/n},\qquad
+  \widehat{Hf}(k)=-i\sgn(k)\widehat f(k),\quad -15\le k\le 15 .
+\]
+Fourier inversion turns $H$ into a convolution with a real odd kernel:
+\begin{equation}\label{eq:kernel}
+  (Hf)_x=\sum_{y}h(x-y)f_y,\qquad
+  h(j)=\frac{2}{n}\sum_{k=1}^{15}\sin\frac{2\pi kj}{n}
+  =\frac{\cos(\pi j/n)-(-1)^j}{n\sin(\pi j/n)}\quad(j\ne0),
+\end{equation}
+with $h(0)=0$. As matrices, $H^{\mathsf T}=-H$, $H\one=0$ and $H^{\mathsf T}H=I-\tfrac1n\one\one^{\mathsf T}$. Translations commute with $H$, and the reflection $f_x\mapsto f_{-x}$ anticommutes with it. Consequently the ratio $\|Hf\|_4/\|f\|_4$ is invariant under the dihedral group and under nonzero scaling. The normalization of $\|\cdot\|_4$ does not matter because only the ratio enters.
+
+Put
+\[
+  F(f)=\sum_x (Hf)_x^4,\qquad G(f)=\sum_x f_x^4,\qquad P_U=U^4G-F .
+\]
+The zero-mean unit sphere of $G$ is compact, so $C_{31}^4=\max\{F(f)/G(f):\sum f=0,\ f\neq0\}$ is attained. The upper bound in \cref{thm:main} is the statement that $P_U>0$ on the zero-mean subspace minus the origin.
+
+\section{The certificate and why it implies the theorem}\label{sec:certificate}
+
+\subsection{Quadratic monomials and the Gram matrix}
+For $0\le d\le15$ and $t\in\ZN$ let $z_{d,t}(f)=f_tf_{t+d}$. Because $15<31/2$, these $16\cdot31=496$ products are exactly the distinct quadratic monomials. Let $z(f)\in\R^{496}$ be the vector of all of them. A real array $K=(K_{d,e,s})$ of shape $16\times16\times31$ defines a matrix
+\begin{equation}\label{eq:Q}
+  Q_{(d,t),(e,u)}=K_{d,e,u-t}.
+\end{equation}
+This $Q$ is invariant under simultaneous translation of $t$ and $u$, and it is symmetric if and only if $K_{d,e,s}=K_{e,d,-s}$. The quartic form $z(f)^{\mathsf T}Qz(f)$ is what the certificate uses.
+
+\subsection{The multiplier}
+Let $\mathcal B$ be a set of representatives of the translation orbits of $3$-element multisets in $\ZN$; there are $\binom{33}{3}/31=176$ of them. Given rational numbers $(c_B)_{B\in\mathcal B}$, put
+\[
+  C(f)=\sum_{B=\{b_1,b_2,b_3\}\in\mathcal B} c_B\sum_{t}f_{t+b_1}f_{t+b_2}f_{t+b_3}.
+\]
+The product $\bigl(\sum_x f_x\bigr)C(f)$ is a quartic form that vanishes on the zero-mean subspace.
+
+\subsection{The reduction lemma}
+
+\begin{lemma}\label{lem:reduction}
+Let $Q$ be a real symmetric $496\times496$ matrix and $C$ a real cubic form. Suppose the following hold.
+\begin{enumerate}
+  \item[(a)] $Q\succeq\mu I$ for some $\mu>0$.
+  \item[(b)] The quartic form $E=P_U-z^{\mathsf T}Qz-\bigl(\sum_xf_x\bigr)C$ has monomial coefficients $e_\alpha$ with $\delta:=\sum_\alpha|e_\alpha|<\mu$.
+\end{enumerate}
+Then $P_U(f)\ge(\mu-\delta)G(f)$ for every real $f$ with $\sum_xf_x=0$. In particular $C_{31}<U$.
+\end{lemma}
+
+\begin{proof}
+Let $\sum_x f_x=0$. By (a), $z^{\mathsf T}Qz\ge\mu\|z\|^2$. Keeping only the monomials with $d=0$ gives $\|z\|^2\ge\sum_tz_{0,t}^2=G(f)$. For any degree-four monomial $f^\alpha=f_af_bf_cf_d$, the arithmetic--geometric mean inequality gives $|f^\alpha|\le\frac14(f_a^4+f_b^4+f_c^4+f_d^4)\le\max_jf_j^4\le G(f)$, and hence $|E(f)|\le\delta G(f)$. The multiplier term vanishes. Therefore $P_U(f)=z^{\mathsf T}Qz+E(f)\ge(\mu-\delta)G(f)$.
+\end{proof}
+
+\begin{lemma}\label{lem:psd}
+Let $Q$ be symmetric, and suppose $Q-\gamma_0I=LL^{\mathsf T}+R$ with $R$ symmetric. Let $\rho=\max_i\sum_j|R_{ij}|$. Then $Q\succeq(\gamma_0-\rho)I$.
+\end{lemma}
+
+\begin{proof}
+$LL^{\mathsf T}\succeq0$, and for symmetric $R$ we have $\|R\|_2\le\sqrt{\|R\|_1\|R\|_\infty}=\rho$. Therefore $Q-\gamma_0 I\succeq R\succeq-\rho I$.
+\end{proof}
+
+\subsection{The certificate data}
+The certificate file \texttt{certificate.json} contains integers only. With all scalings stated explicitly, it consists of the following.
+\begin{itemize}
+  \item $U=31387509/20000000$ and $\gamma_0=2^{-29}$.
+  \item $K_{d,e,s}\in2^{-50}\Z$: $7936$ integers.
+  \item $c_B\in2^{-50}\Z$ for the $176$ orbit representatives $B$.
+  \item A lower-triangular $L\in2^{-45}\Z^{496\times496}$: $123{,}256$ integers.
+  \item A witness $q\in\Z^{31}$ with $\sum_x q_x=0$, used for the lower bound.
+\end{itemize}
+
+\section{Exact verification}\label{sec:verification}
+
+The checker \texttt{verify.py} (\cref{sec:repro}) uses only the Python standard library. It never calls the generating code. It performs the steps below and asserts each inequality with exact \texttt{Fraction} or integer arithmetic.
+
+\subsection{Enclosure of the kernel}\label{sec:trig}
+First, $\pi$ is enclosed using $\pi=16\arctan\frac15-4\arctan\frac1{239}$, with $200$ and $80$ terms of the alternating series respectively and the first omitted term as the error bound. The midpoint is rounded to the grid $2^{-300}\Z$, and the radius $r_\pi$ includes the rounding.
+
+Next, for $m=0,\dots,30$ let $x_m=2\tilde\pi m/31$, where $\tilde\pi$ is that midpoint. The checker sums $120$ terms of the Taylor series of $\sin x_m$ and bounds the remainder by the Lagrange estimate $|x_m|^{241}/241!<10^{-100}$. It then adds the Lipschitz error $|x-x_m|\le 2r_\pi m/31$ and rounds to $2^{-300}\Z$.
+
+The values $\tilde h(j)$ obtained from~\eqref{eq:kernel} are rounded to $2^{-200}\Z$, and the checker proves
+\[
+  |\tilde h(j)-h(j)|\le\varepsilon_h<2^{-200},\qquad |\tilde h(j)|+\varepsilon_h<1\quad(0\le j\le30).
+\]
+As an independent sanity check, not used in the proof, the actual deviation from a $70$-digit \texttt{mpmath}~\cite{mpmath} evaluation is $2.8\cdot10^{-61}$, while the claimed radius is $6.2\cdot10^{-61}$.
+
+\subsection{Positive definiteness}
+The checker builds $Q$ from~\eqref{eq:Q} and asserts that it is exactly symmetric. It then forms $R=Q-\gamma_0I-LL^{\mathsf T}$ entrywise with integer arithmetic. To make this exact, every entry is scaled by $2^{90}$; the products of $L$ are formed exactly. The checker finds
+\[
+  \rho<8.6\cdot10^{-12},\qquad \mu:=\gamma_0-\rho>1.854\cdot10^{-9},
+\]
+so \cref{lem:psd} gives hypothesis~(a) of \cref{lem:reduction}.
+
+\subsection{Coefficient comparison}
+The checker expands $z^{\mathsf T}Qz$ ($496^2$ terms) and $\bigl(\sum f\bigr)C$ ($176\cdot31^2$ terms) into monomials. For each of the $\binom{34}{4}=46{,}376$ monomials $f^\alpha$ it computes, exactly,
+\[
+  \tilde e_\alpha=U^4[\alpha\text{ is a fourth power}]-\tilde F_\alpha-\coef_\alpha(z^{\mathsf T}Qz)-\coef_\alpha\bigl((\textstyle\sum f)C\bigr),
+\]
+where
+\[
+  \tilde F_\alpha=\frac{4!}{\prod_j m_j!}\sum_x\prod_j\tilde h(x-j)^{m_j}
+\]
+is the coefficient of $f^\alpha$ in $F$ with $h$ replaced by $\tilde h$ ($m_j$ is the multiplicity of $j$ in $\alpha$). No orbit bookkeeping is used. Since $|h|,|\tilde h|<1$, telescoping gives $\bigl|\prod_{i=1}^4h_i-\prod_{i=1}^4\tilde h_i\bigr|\le4\varepsilon_h$, so $|e_\alpha-\tilde e_\alpha|\le\frac{4!}{\prod m_j!}\cdot31\cdot4\varepsilon_h$. The multinomial coefficients sum to $31^4$, so in total
+\[
+  \delta\le\sum_\alpha|\tilde e_\alpha|+124\cdot31^4\varepsilon_h
+  <2.05\cdot10^{-11}+10^{-52}.
+\]
+
+\subsection{Conclusion of the upper bound}
+Hence $\mu-\delta>1.83\cdot10^{-9}$, and \cref{lem:reduction} proves~\eqref{eq:main} and the upper half of \cref{thm:main}. The checker's actual output is reproduced in \cref{tab:margins}.
+
+\begin{table}[ht]
+\centering
+\caption{Margins reported by the exact checker. Decimal values are rounded outward; the proof uses only the exact rational comparisons.}\label{tab:margins}
+\begin{tabular}{@{}lr@{}}
+\toprule
+Quantity & Value \\
+\midrule
+$\gamma_0$ & $2^{-29}\approx1.8626\cdot10^{-9}$\\
+$\rho=\max_i\sum_j|R_{ij}|$ & $8.505\cdot10^{-12}$\\
+$\mu=\gamma_0-\rho$ & $1.854141\cdot10^{-9}$\\
+$\sum_\alpha|\tilde e_\alpha|$ & $2.049\cdot10^{-11}$\\
+trigonometric error & $7.1\cdot10^{-53}$\\
+$\mu-\delta$ & $1.833647\cdot10^{-9}$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{The lower bound}\label{sec:lower}
+
+The witness $q\in\Z^{31}$ is the $80$-digit numerical maximizer (\cref{sec:numerics}) scaled by $2^{80}$ and rounded. The last coordinate is set so that $\sum q_x=0$ exactly. For each $x$, the checker forms the interval $(Hq)_x\in\bigl[m_x-r_x,\ m_x+r_x\bigr]$ with
+\[
+  m_x=\sum_y\tilde h(x-y)q_y,\qquad r_x=\varepsilon_h\sum_y|q_y|,
+\]
+asserts $|m_x|>r_x$, and bounds $F(q)\ge\sum_x(|m_x|-r_x)^4$. Comparing with $G(q)$ in exact arithmetic gives
+\[
+  F(q)>(1.5693754353475169)^4\,G(q),
+\]
+which proves the lower half of \cref{thm:main}.
+
+\section{How the certificate was found}\label{sec:search}
+
+This section is not needed to check the proof.
+
+\subsection{The semidefinite program}
+Fourier transformation in $t$ block-diagonalizes~\eqref{eq:Q} into $31$ Hermitian matrices of size $16\times16$:
+\[
+  B_k(d,e)=\sum_sK_{d,e,s}e^{-2\pi iks/31},\qquad B_{31-k}=\overline{B_k}.
+\]
+The eigenvalues of $Q$ are those of $B_0,\dots,B_{30}$. For a prescribed margin $\gamma$ we solve
+\[
+  \min t\quad\text{s.t.}\quad tG-F=z^{\mathsf T}Q(K)z+\bigl(\textstyle\sum f\bigr)C,\qquad B_k(K)\succeq\gamma I\ (0\le k\le15),
+\]
+where the equality is imposed on the $1496$ translation orbits of quartic monomials. The variables are $K$ (with the symmetry $K_{d,e,s}=K_{e,d,-s}$), the $176$ coefficients $c_B$, and $t$. We used CVXPY~\cite{CVXPY} with the Clarabel interior-point solver~\cite{Clarabel}; each solve takes about a minute.
+
+With $\gamma=10^{-8}$ the solver returned $t^{1/4}=1.56937544913$. The true minimum eigenvalue of the returned $Q$ was $4.76\cdot10^{-9}$; the solver's limited accuracy loses about half of the requested margin.
+
+\subsection{Rationalization}
+We rounded $c$ and $K$ to $2^{-50}\Z$, symmetrizing $K$ in the process. The orbit equalities were then restored, up to one grid unit, by adjusting a single designated pair $K_{d,e,s}=K_{e,d,-s}$ in each orbit. Target coefficients were computed with $80$-digit \texttt{mpmath}. Because each entry of $K$ contributes to exactly one orbit, these adjustments do not interfere with each other. The gap $U^4-t$ lands on the orbit of $f_t^4$, that is, on the diagonal entries $Q_{(0,t),(0,t)}$, so it only increases $Q$.
+
+Finally, a floating-point Cholesky factor of $Q-2^{-29}I$ was rounded to $2^{-45}\Z$. Its rounding error is exactly what the residual $R$ of \cref{lem:psd} accounts for.
+
+\section{Numerical observations}\label{sec:numerics}
+
+The statements in this section are numerical and are not claimed as theorems, except \cref{prop:kappa}.
+
+\subsection{The extremizer}
+Among $400$ BFGS runs from random starts on the zero-mean subspace, $154$ converged to the same value, and no other local maximum came within $10^{-9}$ of it. Up to the dihedral action and scaling, the maximizer satisfies $f(x)=f(3-x)$, has alternating signs, and has a slowly varying envelope.
+
+We ran Newton's method on the stationarity equations restricted to this symmetric subspace, in $80$-digit arithmetic. Its limit is stationary on the full zero-mean subspace: the projected gradient has norm about $2\cdot10^{-79}$. The value is
+\[
+  C_{31}\stackrel{?}{=}1.569375435347516915783624279736116538624555782213486827\ldots
+\]
+This agrees with the value recorded in~\cite{tdbR144} and with \cref{thm:main}. The Hessian of $F/G$ on the zero-mean subspace has $29$ negative eigenvalues, between $-121.4$ and $-14.3$, and one zero eigenvalue along the scaling direction. So the critical point is a nondegenerate strict local maximum modulo scaling.
+
+\Cref{thm:main} shows that no zero-mean critical value exceeds this one by more than $1.5\cdot10^{-8}$. An integer-relation search found no integer polynomial of degree at most $8$ with coefficients bounded by $10^6$ that annihilates $C_{31}^4$.
+
+\subsection{Evidence that the relaxation is exact}
+
+\begin{proposition}\label{prop:kappa}
+Let $f^\star$ be any zero-mean vector with $F(f^\star)=C_{31}^4G(f^\star)$, and put $\kappa=\|z(f^\star)\|^2/G(f^\star)$. If $(t,Q,C)$ is feasible for the program of \cref{sec:search} with margin $\gamma$, then $t\ge C_{31}^4+\kappa\gamma$.
+\end{proposition}
+
+\begin{proof}
+Evaluate the identity at $f^\star$: $(t-C_{31}^4)G(f^\star)=z(f^\star)^{\mathsf T}Qz(f^\star)\ge\gamma\|z(f^\star)\|^2$.
+\end{proof}
+
+For the numerical maximizer, $\kappa\approx11.94$. The solver gives $(t-C_{31}^4)/\gamma\approx12.9$ at $\gamma=10^{-7}$. At $\gamma=10^{-8}$ the ratio is $\approx21$, which is within the solver's absolute accuracy of about $10^{-8}$. Both values are consistent with $t(\gamma)=C_{31}^4+O(\gamma)$, that is, with the degree-four relaxation with zero-mean multiplier being exact. Without the multiplier, the same program converges to $t^{1/4}\approx1.5698391$. This equals the numerical norm of $H$ on all of $\R^{31}$, so that relaxation is also exact, but for the larger, unconstrained problem.
+
+\subsection{Other orders}
+\Cref{tab:Cn} lists the best values found by multistart BFGS (60 starts) for the analogous zero-mean problem on $\Z/n\Z$ with odd $n$. These values are not certified.
+
+\begin{table}[ht]
+\centering
+\caption{Numerical values of the zero-mean $L^4$ norm of the sign multiplier on $\Z/n\Z$ (not certified).}\label{tab:Cn}
+\begin{tabular}{@{}rrrrrrrrr@{}}
+\toprule
+$n$ & 5 & 7 & 11 & 15 & 21 & 31 & 47 & 63\\
+\midrule
+$C_n\approx$ & 1.20232 & 1.29782 & 1.39908 & 1.45695 & 1.51240 & 1.56938 & 1.62354 & 1.65825\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The sequence increases slowly. A natural question is how it compares with the Pichorides constant $\cot(\pi/8)=1+\sqrt2$ for the circle~\cite{Pichorides1972}.
+
+\section{Reproducibility}\label{sec:repro}
+
+The supplementary archive contains the certificate, the checker, and all generating code. It is available at \url{https://github.com/Sergpreneur/paper-p2730}. To verify:
+\begin{verbatim}
+  python3 -I verify.py certificate.json
+\end{verbatim}
+The checker needs only Python's standard library. On one core it runs in about five minutes, and it prints \texttt{VERIFIED} only after all exact assertions pass. As a negative control, the same certificate with $U$ replaced by $1.5693754$ is rejected.
+
+The generating scripts (\texttt{sdp.py}, \texttt{sdp2.py}, \texttt{gen.py}, \texttt{newton.py}) were run with Python~3.13.16, NumPy~2.5.3, SciPy~1.18.1, CVXPY~1.9.3, Clarabel~0.11.1 and mpmath~1.4.1. The numerical SDP solution is included, so the rationalization step can be rerun without the solver.
+
+\section{Concluding remarks}
+
+What remains open is to prove that $C_{31}$ equals the critical value found above. If the relaxation is exact, as the evidence of \cref{sec:numerics} suggests, then an exact SOS identity with $\mu=0$ should exist. Its Gram matrix would be singular and its coefficients would lie in a number field containing the coordinates of the extremizer. Constructing such an identity exactly is substantially harder than the strict, rounded certificate used here. A cheaper intermediate step is to narrow the bracket with an extended-precision SDP solver, since our margin is limited by the accuracy of a double-precision interior-point method. The same method applies verbatim to other odd orders $n$, with Gram matrices of size $\frac{n+1}{2}\cdot n$.
+
+\bibliographystyle{amsplain}
+\bibliography{refs}
+
+\end{document}
